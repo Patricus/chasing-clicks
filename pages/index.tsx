@@ -3,8 +3,15 @@ import { Pool } from "pg";
 import Head from "next/head";
 import styles from "@/styles/Home.module.css";
 
-export default function Home({ initCount }: { initCount: number }) {
+type Data = {
+    city: string;
+    count: number;
+};
+
+export default function Home({ data }: { data: Data[] }) {
+    const initCount = data.reduce((acc, curr) => acc + curr.count, 0);
     const [count, setCount] = useState(initCount || 0);
+
     const [city, setCity] = useState("Unknown");
 
     const handleClick = async () => {
@@ -14,6 +21,7 @@ export default function Home({ initCount }: { initCount: number }) {
         });
         const count = await res.json();
         setCount(count);
+        data[data.findIndex(row => row.city === city)].count += 1;
     };
 
     const getCity = async () => {
@@ -24,7 +32,7 @@ export default function Home({ initCount }: { initCount: number }) {
 
     useEffect(() => {
         getCity();
-    }, [setCount, setCity]);
+    }, [setCity]);
 
     return (
         <>
@@ -39,6 +47,22 @@ export default function Home({ initCount }: { initCount: number }) {
                 <button onClick={handleClick}>Click Me</button>
                 <h2>{`${count} total clicks`}</h2>
                 <h2>{`Your location is ${city}`}</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>City</th>
+                            <th>Clicks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {data.map(row => (
+                            <tr key={row.city}>
+                                <td>{row.city}</td>
+                                <td>{row.count}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </main>
         </>
     );
@@ -52,8 +76,7 @@ export async function getServerSideProps() {
         },
     });
 
-    const data = await pool.query("SELECT SUM(count) FROM clicks");
-    const count = data.rows[0].sum;
+    const { rows: data } = await pool.query("SELECT * FROM clicks");
 
-    return { props: { initCount: count } };
+    return { props: { data } };
 }
