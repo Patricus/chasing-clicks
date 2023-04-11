@@ -12,4 +12,6 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ---
 
-If you are running this project on localhost, the detected ip address will be your internal ip address. This address cannot be used for geolocation, you should see your location as _Unknown_.
+**Running on localhost:** The detected ip address will be your internal ip address. This address cannot be used for geo-location, you should see your location as _Unknown_.
+
+---
