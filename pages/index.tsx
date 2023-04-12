@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import db from "@/db/connection";
 import Head from "next/head";
 import styles from "@/styles/Home.module.css";
+import createDB from "@/db/create";
 
 type Data = {
     city: string;
@@ -95,10 +96,9 @@ export default function Home({ data, sum }: { data: Data[]; sum: number }) {
 }
 
 export async function getServerSideProps() {
+    // TODO: Move this to run on server start
     // Create table if it doesn't exist
-    await db.query(
-        "CREATE TABLE IF NOT EXISTS clicks (city VARCHAR(255) PRIMARY KEY, count INTEGER NOT NULL)"
-    );
+    createDB();
 
     // Get click data from database
     const { rows: data } = await db.query("SELECT * FROM clicks");
