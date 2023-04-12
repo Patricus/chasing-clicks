@@ -9,36 +9,48 @@ type Data = {
 };
 
 export default function Home({ data, sum }: { data: Data[]; sum: number }) {
+    const [clickData, setClickData] = useState<Data[]>(data || []);
     const [count, setCount] = useState<number>(sum || 0);
     const [city, setCity] = useState<string | null>(null);
     const [cityIdx, setCityIdx] = useState<number>(-1);
 
+    const findCityIdx = () => clickData.findIndex(row => row.city === city);
+
     const handleClick = async () => {
+        // API call to increment click count
         const res = await fetch("/api/clicks", {
             method: "POST",
             body: JSON.stringify({ city }),
         });
         const count = await res.json();
+
+        // Update total click count
         setCount(count);
 
-        const findCityIdx = () => data.findIndex(row => row.city === city);
-
-        if (findCityIdx() === -1 && city) {
-            data.push({ city, count: 1 });
-            setCityIdx(findCityIdx());
-            console.log("cityIdx", cityIdx);
+        if (cityIdx === -1 && city) {
+            // If city doesn't exist, add it
+            setClickData(clickData.concat({ city, count: 1 }));
         } else {
-            data[cityIdx].count += 1;
+            // If city exists, increment count for that city
+            setClickData(
+                clickData.map(row => (row.city === city ? { ...row, count: row.count + 1 } : row))
+            );
         }
     };
 
     useEffect(() => {
+        // Get user's location
         (async () => {
             const res = await fetch("api/geolocate");
             const { city } = await res.json();
             setCity(city || "Unknown");
         })();
     }, [setCity]);
+
+    useEffect(() => {
+        // Find index of city
+        setCityIdx(findCityIdx());
+    }, [city, clickData]);
 
     return (
         <>
@@ -50,14 +62,9 @@ export default function Home({ data, sum }: { data: Data[]; sum: number }) {
             </Head>
             <main className={styles.main}>
                 <h1>Chasing the Clicks</h1>
-                <button onClick={handleClick}>Click Me</button>
-                <input
-                    type="text"
-                    value={city || ""}
-                    onChange={e => setCity(e.target.value)}
-                />{" "}
-                {/* Input for testing purposes only
-                TODO: delete when done testing */}
+                <button onClick={handleClick} disabled={Boolean(!city)}>
+                    Click Me
+                </button>
                 <h2>{`${count} total clicks`}</h2>
                 {city ? <h2>{`Your location is ${city}`}</h2> : <h2>Locating...</h2>}
                 <table>
@@ -68,7 +75,7 @@ export default function Home({ data, sum }: { data: Data[]; sum: number }) {
                         </tr>
                     </thead>
                     <tbody>
-                        {data
+                        {clickData
                             .sort((a, b) => {
                                 if (a.city.toLowerCase() < b.city.toLowerCase()) return -1;
                                 if (a.city.toLowerCase() > b.city.toLowerCase()) return 1;
@@ -95,6 +102,7 @@ export async function getServerSideProps() {
         },
     });
 
+    // Get click data from database
     const { rows: data } = await pool.query("SELECT * FROM clicks");
     const sum = data.reduce((acc, curr) => acc + curr.count, 0);
 
