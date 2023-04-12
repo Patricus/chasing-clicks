@@ -8,11 +8,10 @@ type Data = {
     count: number;
 };
 
-export default function Home({ data }: { data: Data[] }) {
-    const initCount = data.reduce((acc, curr) => acc + curr.count, 0);
-    const [count, setCount] = useState(initCount || 0);
-
-    const [city, setCity] = useState("Unknown");
+export default function Home({ data, sum }: { data: Data[]; sum: number }) {
+    const [count, setCount] = useState<number>(sum || 0);
+    const [city, setCity] = useState<string | null>(null);
+    const [cityIdx, setCityIdx] = useState<number>(-1);
 
     const handleClick = async () => {
         const res = await fetch("/api/clicks", {
@@ -21,17 +20,24 @@ export default function Home({ data }: { data: Data[] }) {
         });
         const count = await res.json();
         setCount(count);
-        data[data.findIndex(row => row.city === city)].count += 1;
-    };
 
-    const getCity = async () => {
-        const res = await fetch("api/geolocate");
-        const { city } = await res.json();
-        setCity(city || "Unknown");
+        const findCityIdx = () => data.findIndex(row => row.city === city);
+
+        if (findCityIdx() === -1 && city) {
+            data.push({ city, count: 1 });
+            setCityIdx(findCityIdx());
+            console.log("cityIdx", cityIdx);
+        } else {
+            data[cityIdx].count += 1;
+        }
     };
 
     useEffect(() => {
-        getCity();
+        (async () => {
+            const res = await fetch("api/geolocate");
+            const { city } = await res.json();
+            setCity(city || "Unknown");
+        })();
     }, [setCity]);
 
     return (
@@ -45,8 +51,15 @@ export default function Home({ data }: { data: Data[] }) {
             <main className={styles.main}>
                 <h1>Chasing the Clicks</h1>
                 <button onClick={handleClick}>Click Me</button>
+                <input
+                    type="text"
+                    value={city || ""}
+                    onChange={e => setCity(e.target.value)}
+                />{" "}
+                {/* Input for testing purposes only
+                TODO: delete when done testing */}
                 <h2>{`${count} total clicks`}</h2>
-                <h2>{`Your location is ${city}`}</h2>
+                {city ? <h2>{`Your location is ${city}`}</h2> : <h2>Locating...</h2>}
                 <table>
                     <thead>
                         <tr>
@@ -55,12 +68,18 @@ export default function Home({ data }: { data: Data[] }) {
                         </tr>
                     </thead>
                     <tbody>
-                        {data.map(row => (
-                            <tr key={row.city}>
-                                <td>{row.city}</td>
-                                <td>{row.count}</td>
-                            </tr>
-                        ))}
+                        {data
+                            .sort((a, b) => {
+                                if (a.city.toLowerCase() < b.city.toLowerCase()) return -1;
+                                if (a.city.toLowerCase() > b.city.toLowerCase()) return 1;
+                                return 0;
+                            })
+                            .map(row => (
+                                <tr key={row.city}>
+                                    <td>{row.city}</td>
+                                    <td>{row.count}</td>
+                                </tr>
+                            ))}
                     </tbody>
                 </table>
             </main>
@@ -77,6 +96,7 @@ export async function getServerSideProps() {
     });
 
     const { rows: data } = await pool.query("SELECT * FROM clicks");
+    const sum = data.reduce((acc, curr) => acc + curr.count, 0);
 
-    return { props: { data } };
+    return { props: { data, sum } };
 }

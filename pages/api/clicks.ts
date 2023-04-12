@@ -11,10 +11,13 @@ const pool = new Pool({
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === "POST") {
-        let { city } = req.body;
-        if (!city) {
-            city = "Unknown";
-        }
+        const body = JSON.parse(req.body);
+        console.log("body", body);
+        const city = body.city || "Unknown";
+        console.log("city", city);
+        // if (!city) {
+        //     city = "Unknown";
+        // }
         await pool.query(
             `INSERT INTO clicks (city, count) VALUES ('${city}', 1) ON CONFLICT (city) DO UPDATE SET count = clicks.count + 1`
         );

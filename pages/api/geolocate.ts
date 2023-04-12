@@ -9,11 +9,10 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     )
         .then(res => res.json())
         .then(city => {
-            console.log("city", city);
-            res.status(200).json(city || "Unknown");
+            res.status(200).json(city);
         })
         .catch(err => {
             res.status(500).json({ error: "Internal server error" });
-            console.log(err);
+            console.error(err);
         });
 }
