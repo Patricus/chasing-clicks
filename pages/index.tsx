@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pool } from "pg";
+import db from "@/db/connection";
 import Head from "next/head";
 import styles from "@/styles/Home.module.css";
 
@@ -95,20 +95,13 @@ export default function Home({ data, sum }: { data: Data[]; sum: number }) {
 }
 
 export async function getServerSideProps() {
-    const pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
-        ssl: {
-            rejectUnauthorized: false,
-        },
-    });
-
     // Create table if it doesn't exist
-    await pool.query(
+    await db.query(
         "CREATE TABLE IF NOT EXISTS clicks (city VARCHAR(255) PRIMARY KEY, count INTEGER NOT NULL)"
     );
 
     // Get click data from database
-    const { rows: data } = await pool.query("SELECT * FROM clicks");
+    const { rows: data } = await db.query("SELECT * FROM clicks");
     const sum = data.reduce((acc, curr) => acc + curr.count, 0);
 
     return { props: { data, sum } };
