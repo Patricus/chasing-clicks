@@ -51,7 +51,7 @@ export default function Home({ data, sum }: { data: Data[]; sum: number }) {
     useEffect(() => {
         // Find index of city
         setCityIdx(findCityIdx());
-    }, [city, clickData, findCityIdx]);
+    }, [city, clickData]);
 
     return (
         <>
