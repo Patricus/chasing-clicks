@@ -1,9 +1,10 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import { NextApiRequest, NextApiResponse } from "next";
+import requestIp from "request-ip";
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
     // Get IP address from request
-    const ip: string = req.connection.remoteAddress as string;
+    const ip: string = requestIp.getClientIp(req) || "0.0.0.0";
 
     // Get city from IP address
     fetch(
