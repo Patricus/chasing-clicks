@@ -10,7 +10,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Increase click count of city by 1
         await db.query(
-            `INSERT INTO clicks (city, count) VALUES ('${city}', 1) ON CONFLICT (city) DO UPDATE SET count = clicks.count + 1`
+            `INSERT INTO clicks (location, count) VALUES ('${city}', 1) ON CONFLICT (location) DO UPDATE SET count = clicks.count + 1`
         );
 
         // Get total click count

@@ -11,7 +11,7 @@ export default function createDB() {
     // Create clicks table
     db.query(
         `CREATE TABLE IF NOT EXISTS clicks (
-            city VARCHAR(255) PRIMARY KEY,
+            location VARCHAR(255) PRIMARY KEY,
             count INTEGER NOT NULL
         )`
     );

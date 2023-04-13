@@ -84,8 +84,8 @@ export default function Home({ data, sum }: { data: Data[]; sum: number }) {
                                 if (a.location.toLowerCase() > b.location.toLowerCase()) return 1;
                                 return 0;
                             })
-                            .map(row => (
-                                <tr key={row.location}>
+                            .map((row, idx) => (
+                                <tr key={idx}>
                                     <td>{row.location}</td>
                                     <td>{row.count}</td>
                                 </tr>
