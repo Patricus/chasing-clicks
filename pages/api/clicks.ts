@@ -6,7 +6,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === "POST") {
         // Get city from request body
         const body = JSON.parse(req.body);
-        const city = body.city || "Unknown";
+        const city = body.location || "Unknown";
 
         // Increase click count of city by 1
         await db.query(
