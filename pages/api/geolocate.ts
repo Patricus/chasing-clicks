@@ -8,7 +8,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
     // Get city from IP address
     fetch(
-        `https://ipgeolocation.abstractapi.com/v1/?api_key=${process.env.IP_API_KEY}&ip_address=${ip}&fields=city`
+        `https://ipgeolocation.abstractapi.com/v1/?api_key=${process.env.IP_API_KEY}&ip_address=${ip}&fields=city,region,country`
     )
         .then(res => res.json())
         .then(city => {

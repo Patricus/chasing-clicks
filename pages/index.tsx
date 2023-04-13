@@ -5,36 +5,38 @@ import styles from "@/styles/Home.module.css";
 import createDB from "@/db/create";
 
 type Data = {
-    city: string;
+    location: string;
     count: number;
 };
 
 export default function Home({ data, sum }: { data: Data[]; sum: number }) {
     const [clickData, setClickData] = useState<Data[]>(data || []);
     const [count, setCount] = useState<number>(sum || 0);
-    const [city, setCity] = useState<string | null>(null);
+    const [location, setLocation] = useState<string | null>(null);
     const [cityIdx, setCityIdx] = useState<number>(-1);
 
-    const findCityIdx = () => clickData.findIndex(row => row.city === city);
+    const findCityIdx = () => clickData.findIndex(row => row.location === location);
 
     const handleClick = async () => {
         // API call to increment click count
         const res = await fetch("/api/clicks", {
             method: "POST",
-            body: JSON.stringify({ city }),
+            body: JSON.stringify({ location }),
         });
         const count = await res.json();
 
         // Update total click count
         setCount(count);
 
-        if (cityIdx === -1 && city) {
-            // If city doesn't exist, add it
-            setClickData(clickData.concat({ city, count: 1 }));
+        if (cityIdx === -1 && location) {
+            // If location doesn't exist, add it
+            setClickData(clickData.concat({ location, count: 1 }));
         } else {
-            // If city exists, increment count for that city
+            // If location exists, increment count for that location
             setClickData(
-                clickData.map(row => (row.city === city ? { ...row, count: row.count + 1 } : row))
+                clickData.map(row =>
+                    row.location === location ? { ...row, count: row.count + 1 } : row
+                )
             );
         }
     };
@@ -43,15 +45,15 @@ export default function Home({ data, sum }: { data: Data[]; sum: number }) {
         // Get user's location
         (async () => {
             const res = await fetch("api/geolocate");
-            const { city } = await res.json();
-            setCity(city || "Unknown");
+            const { city, region, country } = await res.json();
+            setLocation(city && region && country ? `${city}, ${region} - ${country}` : "Unknown");
         })();
-    }, [setCity]);
+    }, [setLocation]);
 
     useEffect(() => {
-        // Find index of city
+        // Find index of location
         setCityIdx(findCityIdx());
-    }, [city, clickData]);
+    }, [location, clickData, findCityIdx]);
 
     return (
         <>
@@ -63,28 +65,28 @@ export default function Home({ data, sum }: { data: Data[]; sum: number }) {
             </Head>
             <main className={styles.main}>
                 <h1>Chasing the Clicks</h1>
-                <button onClick={handleClick} disabled={Boolean(!city)}>
+                <button onClick={handleClick} disabled={Boolean(!location)}>
                     Click Me
                 </button>
                 <h2>{`${count} total clicks`}</h2>
-                {city ? <h2>{`Your location is ${city}`}</h2> : <h2>Locating...</h2>}
+                {location ? <h2>{`Your location is ${location}`}</h2> : <h2>Locating...</h2>}
                 <table>
                     <thead>
                         <tr>
-                            <th>City</th>
+                            <th>Location</th>
                             <th>Clicks</th>
                         </tr>
                     </thead>
                     <tbody>
                         {clickData
                             .sort((a, b) => {
-                                if (a.city.toLowerCase() < b.city.toLowerCase()) return -1;
-                                if (a.city.toLowerCase() > b.city.toLowerCase()) return 1;
+                                if (a.location.toLowerCase() < b.location.toLowerCase()) return -1;
+                                if (a.location.toLowerCase() > b.location.toLowerCase()) return 1;
                                 return 0;
                             })
                             .map(row => (
-                                <tr key={row.city}>
-                                    <td>{row.city}</td>
+                                <tr key={row.location}>
+                                    <td>{row.location}</td>
                                     <td>{row.count}</td>
                                 </tr>
                             ))}
